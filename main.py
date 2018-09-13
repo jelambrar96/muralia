@@ -15,14 +15,20 @@ from muralia.utils import (
 from muralia.pdi import (
     compare_dist,
     correlation_matrix,
-    create_small_images
+    create_small_images,
+    generate_mosaic
     )
 from muralia.files import (
     files_from_dir,
     is_file_exist,
     join_path,
-    mkdir
+    mkdir,
+    load_list,
+    save_list
     )
+from muralia.position import(
+    distances_to_point
+)
 # -----------------------------------------------------------------------------
 # -----------------------------------------------------------------------------
 def format_number(i):
@@ -36,6 +42,8 @@ def main():
     segments_path = 'output_images/segments'
     correlation_file = 'output_images/correlation_file'
     path_output_main_image = 'output_images/main_image/output_main.png'
+    path_output_filename_small = 'output_images/path_output_filename_small.txt'
+    output_path_mosaic = 'output_images/mosac_output.png'
     # --------------------------------------------------------------------------
     # se escoge el tamano apropiado para las imagenes pequenas
 
@@ -54,6 +62,12 @@ def main():
     #"""
     # --------------------------------------------------------------------------
     # se leen las imagenes pequenas
+    if (is_file_exist(path_output_filename_small)):
+        set_files = load_list(path_output_filename_small)
+    else:
+        set_files = files_from_dir(set_path, root=False)
+        set_files.sort()
+        save_list(path_output_filename_small, set_files)
     """
     set_files = files_from_dir(set_path, root=False)
     set_files.sort()
@@ -72,16 +86,27 @@ def main():
     # --------------------------------------------------------------------------
     if not is_file_exist(correlation_file + '.npz'):
         print('creating a correlation matrix and save... ')
-        corr_mat =  correlation_matrix(main_image, path_output_main_image, resize_files, little_shape, shape_images)
-        np.savez_compressed('output_images/correlation_file', a=corr_mat)
+        pos_list = list(range(8))
+        corr_mat, pos_mat =  correlation_matrix(main_image, path_output_main_image, resize_files, little_shape, shape_images, pos_list)
+        np.savez_compressed('output_images/correlation_file', a=corr_mat, b=pos_mat)
     else:
         print('load correlation matrix... ')
         loaded = np.load(correlation_file + '.npz')
         corr_mat = loaded['a']
+        pos_mat = loaded['b']
 
-    print(corr_mat.shape)
-# -----------------------------------------------------------------------------
-# -----------------------------------------------------------------------------
+    #print(corr_mat.shape)
+    # -----------------------------------------------------------------------------
+    # -----------------------------------------------------------------------------
+    #index = [ (int(i),int(j)) for d,i,j in distances_to_point(shape_images)]
+    # -----------------------------------------------------------------------------
+    # -----------------------------------------------------------------------------
+    new_set_files = [join_path(resize_path, item) for item in set_files]
+    generate_mosaic(shape_images, corr_mat, new_set_files, pos_mat, little_shape, output_path_mosaic)
+
+    # -----------------------------------------------------------------------------
+    # -----------------------------------------------------------------------------
+
     print('success!')
 # -----------------------------------------------------------------------------
 # -----------------------------------------------------------------------------

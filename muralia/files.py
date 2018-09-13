@@ -29,3 +29,13 @@ def mkdir(path):
     else:
         mkd(path)
         return True
+# ----------------------------------------------------------------------------
+def save_list(filename, mylist):
+    with open(filename, 'w') as f:
+        for s in mylist:
+            f.write(str(s) + '\n')
+# ----------------------------------------------------------------------------
+def load_list(filename):
+    with open(filename, "r") as f:
+        return [line.strip() for line in f]
+# ----------------------------------------------------------------------------

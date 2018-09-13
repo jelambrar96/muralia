@@ -42,3 +42,8 @@ def spimat(image, index):
     new_index = index.astype(np.int32)
     new_image[new_index[range(n), 1], new_index[range(n), 2]] = array[range(n)]
     return new_image
+
+""" ------------------------------------------------------------------------ """
+def distances_to_point(shape, center=None):
+    distances = distances_to_center(shape, center=center)
+    return index_spiral(distances)
