@@ -8,13 +8,16 @@ from muralia.utils import (
     imshow,
     resize_image,
     imwrite,
-    imgrotate
+    imgrotate,
+    crop_image,
+    format_number
     )
 from muralia.files import (
     is_file_exist,
     mkdir,
     join_path,
-    files_from_dir
+    files_from_dir,
+    save_list
     )
 from muralia.position import(
     distances_to_point
@@ -35,12 +38,6 @@ def compare_dist(img1, img2, log=True, dist='euclidean'):
     # convert type
     img1 = img1.astype(np.int32).flatten()
     img2 = img2.astype(np.int32).flatten()
-    """
-    print('dimensiones imagen 1: ')
-    print(img1.shape)
-    print('dimensiones imagen 2: ')
-    print(img2.shape)
-    """
     # using euclidean or manthan distance
     if dist == 'euclidean':
         distance = np.sum(np.square(img1 - img2), dtype=np.float32)/shape1
@@ -66,23 +63,24 @@ def correlation_matrix_iter(set_path, segmen_path):
             #jk = input()
             mat[i,j] = compare_dist(set_image, segmen_image, log=True)
             print('creating correlation matrix... progress: ' +
-                str(100*(i*m + j)/total) + '% ', end='\r')
-    print('creating correlation matrix... progress: 100\%')
+                format_number(100*(i*m + j)/total) + '% ', end='\r')
+    print('creating correlation matrix... progress: 100\% ')
     return mat
 # -----------------------------------------------------------------------------
 # -----------------------------------------------------------------------------
 def correlation_matrix(path_image, path_output_main_image, set_path,
-    little_shape, format=(9,16), listpos=None):
+    little_shape, format=(9,16), listpos=None, generate_main_image=True):
     # se lee la imagen principal
     print('reading main image')
     image = imread(path_image)
     print('creating new main image')
     if is_file_exist(path_output_main_image):
         output = imread(path_output_main_image)
-        imwrite(path_output_main_image, output)
-    else:
+        #imwrite(path_output_main_image, output)
+    elif(generate_main_image): 
         main_size = (little_shape[0] * format[0], little_shape[1] * format[1])
         output = resize_format(image, main_size)
+        imwrite(path_output_main_image, output)
     #imshow(main_image)
     print('reshape main image')
     output = reshape_main_image(output, format, little_shape)
@@ -92,25 +90,61 @@ def correlation_matrix(path_image, path_output_main_image, set_path,
     print('create empty position matrix')
     pos_mat = np.zeros((n,format[0]*format[1]), dtype=np.uint8)
     print('comparitions')
-    n_elem = int(np.prod(little_shape))
+    # n_elem = int(np.prod(little_shape))
     #print(pos_mat.shape)
     for i,filename in enumerate(set_path):
         mini_image = imread(filename)
         #mat_corr[i,:] = get_correlation(output, mini_image)
-        #distance = np.sum(np.square(output - mini_image.flatten().astype(np.float32)), dtype=np.float32, axis=1)/n_elem
-        #mat_corr[i,:] = np.log(1 + distance)
         mat_corr[i,:], pos_mat[i,:] = get_correlation(output, mini_image, format,
             listpos=listpos)
         #print(pos_mat[i,:])
         #jk = input()
-
         print('creating correlation matrix... progress: ' +
-            str(100*i/n) + '% ', end='\r')
-
+            format_number(100*i/n) + '% ', end='\r')
     print('creating correlation matrix... progress: 100\%')
     return mat_corr, pos_mat
 # -----------------------------------------------------------------------------
 # -----------------------------------------------------------------------------
+
+# -----------------------------------------------------------------------------
+# -----------------------------------------------------------------------------
+def correlation_matrix_resize(path_image, path_output_main_image, set_path,
+    little_shape, format=(9,16), listpos=None, generate_main_image=True):
+    # se lee la imagen principal
+    print('reading main image')
+    image = imread(path_image)
+    print('creating new main image')
+    if is_file_exist(path_output_main_image):
+        output = imread(path_output_main_image)
+        #imwrite(path_output_main_image, output)
+    elif(generate_main_image): 
+        main_size = (little_shape[0] * format[0], little_shape[1] * format[1])
+        output = resize_format(image, main_size)
+        imwrite(path_output_main_image, output)
+    #imshow(main_image)
+    print('reshape main image')
+    output = reshape_main_image(output, format, little_shape)
+    n = len(set_path)
+    print('create empty correlation matrix')
+    mat_corr = np.zeros((n, format[0]*format[1]), dtype=np.float32)
+    print('create empty position matrix')
+    pos_mat = np.zeros((n,format[0]*format[1]), dtype=np.uint8)
+    print('comparitions')
+    #n_elem = int(np.prod(little_shape))
+    #print(pos_mat.shape)
+    for i,filename in enumerate(set_path):
+        mini_image = imread(filename)
+        mini_image_resize = resize_image(mini_image, little_shape)
+        #mat_corr[i,:] = get_correlation(output, mini_image)
+        #mat_corr[i,:] = np.log(1 + distance)
+        mat_corr[i,:],pos_mat[i,:] = get_correlation(output, mini_image_resize,
+            format, listpos=listpos)
+        #print(pos_mat[i,:])
+        #jk = input()
+        print('creating correlation matrix... progress: ' +
+            format_number(100*i/n) + '% ', end='\r')
+    print('creating correlation matrix... progress: 100\%')
+    return mat_corr, pos_mat
 """
 def reshape_main_image(main_image, format, little_shape):
     # listas y variables utiles
@@ -215,7 +249,7 @@ def segments_main_image(path_image, output_path, little_shape,
             imwrite(filename_out, crop)
             cont += 1
         print('creating small images... progress: ' +
-            str(int(100*(i+1)/n_little)) + '% ', end='\r')
+            format_number(int(100*(i+1)/n_little)) + '% ', end='\r')
     print('')
     pass
 # -----------------------------------------------------------------------------
@@ -236,7 +270,7 @@ def create_small_images(set_path, resize_path, little_shape, check=False):
                 #limage = imread(f)
                 resize = resize_image(limage, little_shape[:2])
                 #imshow(resize, axis='on')
-                value = imwrite(join_path(resize_path, f), resize)
+                #value = imwrite(join_path(resize_path, f), resize)
             else:
                 limage = imread(fileout)
                 if limage.shape != little_shape:
@@ -258,17 +292,21 @@ def create_small_images(set_path, resize_path, little_shape, check=False):
                 #imshow(resize, axis='on')
                 value = imwrite(join_path(resize_path, f), resize)
             print('creating small images... progress: ' +
-                str(int(100*(i+1)/n_little)) + '% ', end='\r')
+                format_number(int(100*(i+1)/n_little)) + '% ', end='\r')
     print('')
 # -----------------------------------------------------------------------------
 # -----------------------------------------------------------------------------
-def generate_mosaic(mosaic_shape, correlation_matrix, set_files, position_matrix, mini_image_shape, output_path):
-    mosaic = np.zeros((mini_image_shape[0] * mosaic_shape[0], mini_image_shape[1] * mosaic_shape[1], 3), dtype = np.uint8)
+def generate_mosaic(mosaic_shape, correlation_matrix, set_files,
+    position_matrix, mini_image_shape, output_path, output_filenames_list_pos):
+    hmos = mini_image_shape[0] * mosaic_shape[0]
+    wmos = mini_image_shape[1] * mosaic_shape[1]
+    mosaic = np.zeros((hmos, wmos, 3), dtype = np.uint8)
     # las correlaciones no exceden este valor
     max_corr = 12
-    index = [ (int(j),int(i)) for d,i,j in distances_to_point(mosaic_shape)]
+    index = [ (int(i),int(j))  for d,i,j in distances_to_point(mosaic_shape)]
     number_mini_images = len(index)
     hmin,wmin = mini_image_shape[:2]
+    filenames_list = [[(0,0), ''] for i in range(number_mini_images)]
     # print(mini_image_shape)
     # print(mosaic_shape)
     #for item in index:
@@ -293,19 +331,89 @@ def generate_mosaic(mosaic_shape, correlation_matrix, set_files, position_matrix
         #print(correlation_matrix[:, col])
         #print(correlation_matrix[argmin, :])
         #input()
-
         pos = position_matrix[argmin, col]
-        mini_image = imread(set_files[argmin])
+        fn = set_files[argmin]
+        mini_image = imread(fn)
+        filenames_list[n] = [(i,j), fn]
         rot_mini_image = imgrotate(mini_image, pos)
         #print(mini_image_shape)
         #print(rot_mini_image.shape)
         #print(i, ' ',j)
         #jk = input()
         mosaic[hmin*i:hmin*i+hmin, wmin*j:wmin*(j+1)] = rot_mini_image
-    imwrite(output_path, mosaic)
+    #---------------------------------------------------------------------------
+    if not is_file_exist(output_path):
+        imwrite(output_path, mosaic)
+    #print(output_path)
+    #jk = input()
+    save_list(output_filenames_list_pos, filenames_list)
 
-
+#-------------------------------------------------------------------------------
 def set_mini_image(main_image, min_image, position):
     h,w = min_image.shape[:2]
     i,j = position
     main_image[h*i : h*(i+1), w*j: w*(j+1)] = min_image
+# -----------------------------------------------------------------------------
+# -----------------------------------------------------------------------------
+def generate_mosaic_resize(mosaic_shape, correlation_matrix, set_files,
+    position_matrix, mini_image_shape, output_path, output_filenames_list_pos):
+    hmos = mini_image_shape[0] * mosaic_shape[0]
+    wmos = mini_image_shape[1] * mosaic_shape[1]
+    mosaic = np.zeros((hmos, wmos, 3), dtype = np.uint8)
+    # las correlaciones no exceden este valor
+    max_corr = 12
+    index = [ (int(i),int(j)) for d,i,j in distances_to_point(mosaic_shape)]
+    number_mini_images = len(index)
+    hmin,wmin = mini_image_shape[:2]
+    filenames_list = [[(0,0), ''] for i in range(number_mini_images)]
+    # print(mini_image_shape)
+    # print(mosaic_shape)
+    #for item in index:
+    #    print(item)
+    #k = input()
+    #print(mosaic_shape[0])
+    #input()
+    for n in range(number_mini_images):
+        i, j = index[n]
+        col = i *  mosaic_shape[1] + j
+        #print(col)
+        #jk = input()
+        argmin = np.argmin(correlation_matrix[:,col].flatten())
+        #print(argmin)
+        #min_corr = correlation_matrix[argmin, col]
+        #if min_corr == 12:
+        #    print(min_corr)
+        #    print(correlation_matrix[:,col])
+        #    input()
+        correlation_matrix[:, col] = max_corr
+        correlation_matrix[argmin, :] = max_corr
+        #print(correlation_matrix[:, col])
+        #print(correlation_matrix[argmin, :])
+        #input()
+        pos = position_matrix[argmin, col]
+        fn = set_files[argmin]
+        mini_image = imread(fn)
+        resize_mini_image = resize_image(mini_image, mini_image_shape)
+        filenames_list[n] = [(i,j), fn]
+        rot_mini_image = imgrotate(resize_mini_image, pos)
+        #print(mini_image_shape)
+        #print(rot_mini_image.shape)
+        #print(i, ' ',j)
+        #jk = input()
+        mosaic[hmin*i:hmin*i+hmin, wmin*j:wmin*(j+1)] = rot_mini_image
+        print('creating mosaic... progress: ' +
+            format_number(int(100*(n+1)/number_mini_images)) + '% ', end='\r')
+    print('')
+    #---------------------------------------------------------------------------
+    if not is_file_exist(output_path):
+        imwrite(output_path, mosaic)
+    #print(output_path)
+    #jk = input()
+    save_list(output_filenames_list_pos, filenames_list)
+#-------------------------------------------------------------------------------
+#-------------------------------------------------------------------------------
+def order_filenames_position_list(list_filenames_position): 
+    positions = [item[0] for item in list_filenames_position] 
+    #npos = np.array(positions)
+    print(positions)
+    return []

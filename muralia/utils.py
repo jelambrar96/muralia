@@ -53,10 +53,17 @@ def cvt_square(image):
         return image
 # -----------------------------------------------------------------------------
 # ----------------------------------------------------------------------------
-def resize_image(image, resolution):
+def resize_image(image, shape, interpolation='cubic'):
+    resolution = shape[:2]
     if is_square(image):
         image = cvt_square(image)
-    rimg = cv2.resize(image, dsize=resolution, interpolation=cv2.INTER_CUBIC)
+    # ----------
+    if interpolation=='linear':
+        inter = cv2.INTER_LINEAR
+    elif interpolation=='cubic':
+        inter = cv2.INTER_CUBIC
+    # ----------
+    rimg = cv2.resize(image, dsize=resolution, interpolation=inter)
     #rimg = cv2.resize(image, (590, 590), interpolation=cv2.INTER_CUBIC)
     return rimg
     #return cv2.resize(image, resolution)
@@ -108,3 +115,9 @@ def imwrite(filename, image):
 def imgrotate(image, index):
     output = np.rot90(np.fliplr(image), index % 4) if (index // 4) else np.rot90(image, index % 4)
     return output
+# -----------------------------------------------------------------------------
+# -----------------------------------------------------------------------------
+def format_number(i):
+    return '%04d'%(i)
+# -----------------------------------------------------------------------------
+# -----------------------------------------------------------------------------
