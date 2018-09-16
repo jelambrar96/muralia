@@ -58,7 +58,7 @@ def main():
 
     #little_shape = (590, 590, 3)
     little_shape = (32,32,3)
-    shape_images = (18,32) #16:9
+    shape_images = (36,64) #16:9
 
     #little_shape = (295, 295, 3)
     #shape_images = (36, 64) #16:9

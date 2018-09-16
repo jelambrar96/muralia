@@ -10,7 +10,8 @@ from muralia.utils import (
     imwrite,
     imgrotate,
     crop_image,
-    format_number
+    format_number,
+    format_percent
     )
 from muralia.files import (
     is_file_exist,
@@ -63,14 +64,16 @@ def correlation_matrix_iter(set_path, segmen_path):
             #jk = input()
             mat[i,j] = compare_dist(set_image, segmen_image, log=True)
             print('creating correlation matrix... progress: ' +
-                format_number(100*(i*m + j)/total) + '% ', end='\r')
-    print('creating correlation matrix... progress: 100\% ')
+                format_percent(100*(i*m + j)/total)+ '%        ', end='\r')
+    print('creating correlation matrix... progress: 100%       ')
     return mat
 # -----------------------------------------------------------------------------
 # -----------------------------------------------------------------------------
 def correlation_matrix(path_image, path_output_main_image, set_path,
-    little_shape, format=(9,16), listpos=None, generate_main_image=True):
+    mini_little_shape, format=(9,16), listpos=None, generate_main_image=True, 
+    scale=1):
     # se lee la imagen principal
+    little_shape = tuple([int(item*scale) for item in mini_little_shape])
     print('reading main image')
     image = imread(path_image)
     print('creating new main image')
@@ -100,8 +103,8 @@ def correlation_matrix(path_image, path_output_main_image, set_path,
         #print(pos_mat[i,:])
         #jk = input()
         print('creating correlation matrix... progress: ' +
-            format_number(100*i/n) + '% ', end='\r')
-    print('creating correlation matrix... progress: 100\%')
+            format_percent(100*i/n)+ '%        ', end='\r')
+    print('creating correlation matrix... progress: 100%         ')
     return mat_corr, pos_mat
 # -----------------------------------------------------------------------------
 # -----------------------------------------------------------------------------
@@ -109,8 +112,10 @@ def correlation_matrix(path_image, path_output_main_image, set_path,
 # -----------------------------------------------------------------------------
 # -----------------------------------------------------------------------------
 def correlation_matrix_resize(path_image, path_output_main_image, set_path,
-    little_shape, format=(9,16), listpos=None, generate_main_image=True):
+    mini_little_shape, format=(9,16), listpos=None, 
+    generate_main_image=True, scale=1):
     # se lee la imagen principal
+    little_shape = tuple([int(item*scale) for item in mini_little_shape])
     print('reading main image')
     image = imread(path_image)
     print('creating new main image')
@@ -142,9 +147,11 @@ def correlation_matrix_resize(path_image, path_output_main_image, set_path,
         #print(pos_mat[i,:])
         #jk = input()
         print('creating correlation matrix... progress: ' +
-            format_number(100*i/n) + '% ', end='\r')
-    print('creating correlation matrix... progress: 100\%')
+            format_percent(100*i/n)+ '%        ', end='\r')
+    print('creating correlation matrix... progress: 100%         ')
     return mat_corr, pos_mat
+# -----------------------------------------------------------------------------
+# -----------------------------------------------------------------------------
 """
 def reshape_main_image(main_image, format, little_shape):
     # listas y variables utiles
@@ -249,7 +256,7 @@ def segments_main_image(path_image, output_path, little_shape,
             imwrite(filename_out, crop)
             cont += 1
         print('creating small images... progress: ' +
-            format_number(int(100*(i+1)/n_little)) + '% ', end='\r')
+            format_percent(100*(i+1)/n_little)+ '%        ', end='\r')
     print('')
     pass
 # -----------------------------------------------------------------------------
@@ -270,7 +277,7 @@ def create_small_images(set_path, resize_path, little_shape, check=False):
                 #limage = imread(f)
                 resize = resize_image(limage, little_shape[:2])
                 #imshow(resize, axis='on')
-                #value = imwrite(join_path(resize_path, f), resize)
+                __ = imwrite(join_path(resize_path, f), resize)
             else:
                 limage = imread(fileout)
                 if limage.shape != little_shape:
@@ -278,9 +285,9 @@ def create_small_images(set_path, resize_path, little_shape, check=False):
                     #limage = imread(f)
                     resize = resize_image(limage, little_shape[:2])
                     #imshow(resize, axis='on')
-                    value = imwrite(join_path(resize_path, f), resize)
+                    __ = imwrite(join_path(resize_path, f), resize)
             print('creating small images... progress: ' +
-                str(int(100*(i+1)/n_little)) + '% ', end='\r')
+                format_percent(100*(i+1)/n_little)+ '%       ', end='\r')
     else:
         for i,f in enumerate(set_files):
             fileout = join_path(resize_path, f)
@@ -290,9 +297,9 @@ def create_small_images(set_path, resize_path, little_shape, check=False):
                 #limage = imread(f)
                 resize = resize_image(limage, little_shape[:2])
                 #imshow(resize, axis='on')
-                value = imwrite(join_path(resize_path, f), resize)
+                _ = imwrite(join_path(resize_path, f), resize)
             print('creating small images... progress: ' +
-                format_number(int(100*(i+1)/n_little)) + '% ', end='\r')
+                format_percent(100*(i+1)/n_little)+ '%       ', end='\r')
     print('')
 # -----------------------------------------------------------------------------
 # -----------------------------------------------------------------------------
@@ -402,7 +409,7 @@ def generate_mosaic_resize(mosaic_shape, correlation_matrix, set_files,
         #jk = input()
         mosaic[hmin*i:hmin*i+hmin, wmin*j:wmin*(j+1)] = rot_mini_image
         print('creating mosaic... progress: ' +
-            format_number(int(100*(n+1)/number_mini_images)) + '% ', end='\r')
+            format_percent(100*(n+1)/number_mini_images)+ '%       ', end='\r')
     print('')
     #---------------------------------------------------------------------------
     if not is_file_exist(output_path):
