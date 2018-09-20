@@ -116,7 +116,6 @@ venv.bak/
 
 *pruebas*
 *.trash/*
-main_images/
 *set_images/*
 *output_images*
 
