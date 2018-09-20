@@ -116,12 +116,15 @@ venv.bak/
 
 *pruebas*
 *.trash/*
-*main_images/*
+main_images/
 *set_images/*
-*output_images* 
+*output_images*
 
 ###############
-# python arrays 
+# python arrays
 *.npz
 *.npy
 *.nyz
+
+##################
+output.txt
