@@ -1,12 +1,15 @@
+import json
+
 from os import listdir
 from os import mkdir as mkd
 from os.path import join, isfile, isdir
 
+
 # ----------------------------------------------------------------------------
 def files_from_dir(pathdir, root=True, image=True):
-    if image: 
+    if image:
         files = [item for item in listdir(pathdir) if is_image_format(item)]
-    else: 
+    else:
         files = listdir(pathdir)
 
     if root:
@@ -22,13 +25,13 @@ def files_from_dir(pathdir, root=True, image=True):
 
 # ----------------------------------------------------------------------------
 def is_image_format(filename):
-    imgformats3 = ['.png', '.jpg', '.tif', '.gif'] 
+    imgformats3 = ['.png', '.jpg', '.tif', '.gif']
     extention = filename[-4:]
-    if extention in imgformats3: 
+    if extention in imgformats3:
         return True
     imgformats4 = ['.jpeg', '.tiff']
     extention = filename[-5:]
-    if extention in imgformats4: 
+    if extention in imgformats4:
         return True
     return False
 
@@ -60,7 +63,8 @@ def load_list(filename):
 def mk_all_dirs(out_path, root=False):
     dirs = {
         'resize':'resize',
-        'main_image':'main_image'
+        'main_image':'main_image',
+        'output_photo_path':'output_photo_path'
     }
     #mkdir(join_path(resize, main_image))
     mkdir(out_path)
@@ -70,3 +74,22 @@ def mk_all_dirs(out_path, root=False):
         if root:
             dirs[k] = h
     return dirs
+# ----------------------------------------------------------------------------
+def cretare_json_features(filename, path_main_image, path_set_images,
+    main_resoltution, format, mini_shape, list_files):
+    data = {
+        'main_image' : path_main_image,
+        'set_images' : path_set_images,
+        'main_resolution' : main_resoltution,
+        'format': format,
+        'mini_shape': mini_shape,
+        'list_pos_files': list_files
+    }
+    #print(data)
+    with open(filename, 'w') as outfile:
+        json.dump(data, outfile)
+# ----------------------------------------------------------------------------
+def load_features_from_json(filename):
+    with open(filename) as f:
+        data = json.load(f)
+    return data

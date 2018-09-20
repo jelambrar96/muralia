@@ -1,5 +1,6 @@
 # pdi.py
 
+import itertools
 import numpy as np
 from scipy import signal
 from muralia.utils import (
@@ -11,14 +12,17 @@ from muralia.utils import (
     imgrotate,
     crop_image,
     format_number,
-    format_percent
+    format_percent,
+    square_image
     )
 from muralia.files import (
     is_file_exist,
     mkdir,
     join_path,
     files_from_dir,
-    save_list
+    save_list,
+    cretare_json_features,
+    load_features_from_json
     )
 from muralia.position import(
     distances_to_point
@@ -50,7 +54,7 @@ def compare_dist(img1, img2, log=True, dist='euclidean'):
     return distance
 # -----------------------------------------------------------------------------
 # -----------------------------------------------------------------------------
-def correlation_matrix_iter(set_path, segmen_path):
+def correlation_matrix_iter(set_path, segmen_path, listpos=None):
     n = len(set_path)
     m = len(segmen_path)
     mat = np.zeros((m,n), dtype=np.float32)
@@ -70,7 +74,7 @@ def correlation_matrix_iter(set_path, segmen_path):
 # -----------------------------------------------------------------------------
 # -----------------------------------------------------------------------------
 def correlation_matrix(path_image, path_output_main_image, set_path,
-    mini_little_shape, format=(9,16), listpos=None, generate_main_image=True, 
+    mini_little_shape, format=(9,16), listpos=None, generate_main_image=True,
     scale=1):
     # se lee la imagen principal
     little_shape = tuple([int(item*scale) for item in mini_little_shape])
@@ -80,7 +84,7 @@ def correlation_matrix(path_image, path_output_main_image, set_path,
     if is_file_exist(path_output_main_image):
         output = imread(path_output_main_image)
         #imwrite(path_output_main_image, output)
-    elif(generate_main_image): 
+    elif(generate_main_image):
         main_size = (little_shape[0] * format[0], little_shape[1] * format[1])
         output = resize_format(image, main_size)
         imwrite(path_output_main_image, output)
@@ -112,7 +116,7 @@ def correlation_matrix(path_image, path_output_main_image, set_path,
 # -----------------------------------------------------------------------------
 # -----------------------------------------------------------------------------
 def correlation_matrix_resize(path_image, path_output_main_image, set_path,
-    mini_little_shape, format=(9,16), listpos=None, 
+    mini_little_shape, format=(9,16), listpos=None,
     generate_main_image=True, scale=1):
     # se lee la imagen principal
     little_shape = tuple([int(item*scale) for item in mini_little_shape])
@@ -122,7 +126,7 @@ def correlation_matrix_resize(path_image, path_output_main_image, set_path,
     if is_file_exist(path_output_main_image):
         output = imread(path_output_main_image)
         #imwrite(path_output_main_image, output)
-    elif(generate_main_image): 
+    elif(generate_main_image):
         main_size = (little_shape[0] * format[0], little_shape[1] * format[1])
         output = resize_format(image, main_size)
         imwrite(path_output_main_image, output)
@@ -139,7 +143,7 @@ def correlation_matrix_resize(path_image, path_output_main_image, set_path,
     #print(pos_mat.shape)
     for i,filename in enumerate(set_path):
         mini_image = imread(filename)
-        mini_image_resize = resize_image(mini_image, little_shape)
+        mini_image_resize = square_image(mini_image, little_shape)
         #mat_corr[i,:] = get_correlation(output, mini_image)
         #mat_corr[i,:] = np.log(1 + distance)
         mat_corr[i,:],pos_mat[i,:] = get_correlation(output, mini_image_resize,
@@ -304,7 +308,8 @@ def create_small_images(set_path, resize_path, little_shape, check=False):
 # -----------------------------------------------------------------------------
 # -----------------------------------------------------------------------------
 def generate_mosaic(mosaic_shape, correlation_matrix, set_files,
-    position_matrix, mini_image_shape, output_path, output_filenames_list_pos):
+    position_matrix, mini_image_shape, output_path,
+    output_filenames_list_pos=None):
     hmos = mini_image_shape[0] * mosaic_shape[0]
     wmos = mini_image_shape[1] * mosaic_shape[1]
     mosaic = np.zeros((hmos, wmos, 3), dtype = np.uint8)
@@ -353,7 +358,9 @@ def generate_mosaic(mosaic_shape, correlation_matrix, set_files,
         imwrite(output_path, mosaic)
     #print(output_path)
     #jk = input()
-    save_list(output_filenames_list_pos, filenames_list)
+    if not output_filenames_list_pos == None:
+        #save_list(output_filenames_list_pos, filenames_list)
+        cretare_json_features(output_filenames_list_pos, '', set_files, (hmos, wmos), mosaic_shape, mini_image_shape, list_pos_files)
 
 #-------------------------------------------------------------------------------
 def set_mini_image(main_image, min_image, position):
@@ -363,7 +370,8 @@ def set_mini_image(main_image, min_image, position):
 # -----------------------------------------------------------------------------
 # -----------------------------------------------------------------------------
 def generate_mosaic_resize(mosaic_shape, correlation_matrix, set_files,
-    position_matrix, mini_image_shape, output_path, output_filenames_list_pos):
+    position_matrix, mini_image_shape, output_path,
+    output_filenames_list_pos=None):
     hmos = mini_image_shape[0] * mosaic_shape[0]
     wmos = mini_image_shape[1] * mosaic_shape[1]
     mosaic = np.zeros((hmos, wmos, 3), dtype = np.uint8)
@@ -384,29 +392,19 @@ def generate_mosaic_resize(mosaic_shape, correlation_matrix, set_files,
         i, j = index[n]
         col = i *  mosaic_shape[1] + j
         #print(col)
-        #jk = input()
         argmin = np.argmin(correlation_matrix[:,col].flatten())
-        #print(argmin)
-        #min_corr = correlation_matrix[argmin, col]
-        #if min_corr == 12:
-        #    print(min_corr)
-        #    print(correlation_matrix[:,col])
-        #    input()
         correlation_matrix[:, col] = max_corr
         correlation_matrix[argmin, :] = max_corr
         #print(correlation_matrix[:, col])
         #print(correlation_matrix[argmin, :])
-        #input()
         pos = position_matrix[argmin, col]
         fn = set_files[argmin]
         mini_image = imread(fn)
-        resize_mini_image = resize_image(mini_image, mini_image_shape)
-        filenames_list[n] = [(i,j), fn]
+        resize_mini_image = square_image(mini_image, mini_image_shape)
+        filenames_list[n] = [(i,j), int(pos), fn]
         rot_mini_image = imgrotate(resize_mini_image, pos)
         #print(mini_image_shape)
         #print(rot_mini_image.shape)
-        #print(i, ' ',j)
-        #jk = input()
         mosaic[hmin*i:hmin*i+hmin, wmin*j:wmin*(j+1)] = rot_mini_image
         print('creating mosaic... progress: ' +
             format_percent(100*(n+1)/number_mini_images)+ '%       ', end='\r')
@@ -416,11 +414,66 @@ def generate_mosaic_resize(mosaic_shape, correlation_matrix, set_files,
         imwrite(output_path, mosaic)
     #print(output_path)
     #jk = input()
-    save_list(output_filenames_list_pos, filenames_list)
+    if not output_filenames_list_pos == None:
+        #save_list(output_filenames_list_pos, filenames_list)
+        cretare_json_features(output_filenames_list_pos, 'main', set_files, (hmos, wmos), mosaic_shape, mini_image_shape, filenames_list)
 #-------------------------------------------------------------------------------
 #-------------------------------------------------------------------------------
-def order_filenames_position_list(list_filenames_position): 
-    positions = [item[0] for item in list_filenames_position] 
+def order_filenames_position_list(list_filenames_position):
+    positions = [item[0] for item in list_filenames_position]
     #npos = np.array(positions)
     print(positions)
     return []
+#-------------------------------------------------------------------------------
+#-------------------------------------------------------------------------------
+def create_photos(photos_path, json_file, format_photos=(6,4)):
+    data = load_features_from_json(json_file)
+    format = data['format']
+    mini_shape = tuple(data['mini_shape'])
+    hmini, wmini = mini_shape[:2]
+    list_pos_files = data['list_pos_files']
+    photo_res = (format_photos[0] * mini_shape[0], format_photos[1] * mini_shape[1] , 3)
+    shape_photos = (format[0]//format_photos[0], format[1]//format_photos[1])
+    n_little = shape_photos[0] * shape_photos[1]
+    # for i in range(shape_photos[0]):
+    #    for j in range(shape_photos[1]):
+    #        for item in list_pos_files:
+    photo = np.zeros(photo_res, dtype=np.uint8)
+    combs = itertools.product(list(range(shape_photos[0])), list(range(shape_photos[1])), list_pos_files)
+    for i,j, item in combs:
+        coord = item[0]
+        if coord[0]//format_photos[0] == i and coord[1]//format_photos[1] == j:
+            rot = item[1]
+            filename = item[2]
+            image = square_image(imread(filename), mini_shape)
+            hpos = mini_shape[0]*(coord[0]%format_photos[0])
+            #print(hpos)
+            wpos = mini_shape[1]*(coord[1]%format_photos[1])
+            # print(wpos)
+            photo[hpos:hpos+hmini, wpos:wpos+wmini] = imgrotate(image, rot)
+            # print('jaja')
+            # print(coord)
+
+        output_filename = join_path(photos_path, str(i + 1) + '_' + str(j + 1) + '.png')
+        imwrite(output_filename, photo)
+        # imshow(photo, figure=True, show=True)
+        print('creating small images... progress: ' +
+            format_percent(100*(shape_photos[1] * i + j) / n_little) +
+            '%   ', end='\r')
+    print('creating small images... progress: 100.00%')
+#-------------------------------------------------------------------------------
+#-------------------------------------------------------------------------------
+def photos_from_mosaic(image, photos_path, little_shape, mosaic_format, shape_photos=(6,4)):
+    h, w = little_shape[:2]
+    n_little = mosaic_format[0] * mosaic_format[1]
+    combs = itertools.product(list(range(mosaic_format[0])), list(range(mosaic_format[1])))
+    # for i in range(mosaic_format[0]):
+    #     for j in range(mosaic_format[1]):
+    for i,j in combs:
+        photo = image[i*h:i*h+h*shape_photos[0], j*w:j*w+w*shape_photos[1]]
+        output_filename = join_path(photos_path, str(i + 1) + '_' + str(j + 1) + '.png')
+        imwrite(output_filename, photo)
+        print('creating small images... progress: ' +
+            format_percent(100*(shape_photos[1] * i + j) / n_little) +
+            '%   ', end='\r')
+    print('creating small images... progress: 100.00%')

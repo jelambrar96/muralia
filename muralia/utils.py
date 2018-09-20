@@ -54,15 +54,20 @@ def cvt_square(image):
 # -----------------------------------------------------------------------------
 # ----------------------------------------------------------------------------
 def resize_image(image, shape, interpolation='cubic'):
+    #def resize_image(image, shape):
     resolution = shape[:2]
     if is_square(image):
         image = cvt_square(image)
-    # ----------
+    # -------------------------------------------------------------------------
+    #
     if interpolation=='linear':
         inter = cv2.INTER_LINEAR
     elif interpolation=='cubic':
         inter = cv2.INTER_CUBIC
-    # ----------
+    else:
+        inter = interpolation
+    #
+    # ------------------------------------------------------------------------
     rimg = cv2.resize(image, dsize=resolution, interpolation=inter)
     #rimg = cv2.resize(image, (590, 590), interpolation=cv2.INTER_CUBIC)
     return rimg
@@ -121,7 +126,11 @@ def format_number(i):
     return '%04d'%(i)
 # -----------------------------------------------------------------------------
 # -----------------------------------------------------------------------------
-def format_percent(item): 
+def format_percent(item):
     #fmt_str = '%' + '2.' + str(decimals) + 'f' #+ r'%' + ' '*4
     return '%2.2f'%(item)
     #return fmt_str%(item)
+# -----------------------------------------------------------------------------
+# -----------------------------------------------------------------------------
+def square_image(image, minishape):
+    return resize_image(cvt_square(image), minishape, interpolation='cubic')

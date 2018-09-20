@@ -17,8 +17,9 @@ from muralia.pdi import (
     correlation_matrix,
     create_small_images,
     generate_mosaic,
-    correlation_matrix_resize, 
-    generate_mosaic_resize
+    correlation_matrix_resize,
+    generate_mosaic_resize,
+    create_photos
     )
 from muralia.files import (
     files_from_dir,
@@ -41,8 +42,8 @@ def format_number(i):
 def main():
 
     # folders
-    set_path = 'set_images' # folder de imagenes pequenas # INPUT 
-    output_path = 'output_images' # folder donde se almancenan los archivos salida # INPUT 
+    set_path = 'set_images' # folder de imagenes pequenas # INPUT
+    output_path = 'output_images' # folder donde se almancenan los archivos salida # INPUT
     __ = mk_all_dirs('output_images', root=True)
 
     # files
@@ -52,6 +53,7 @@ def main():
     output_path_mosaic = join_path(output_path,'mosaic_output.png') # mosaico
     path_output_main_image = join_path(output_path,'main_image/output_main.png') # salida output
     output_filenames_list_pos = join_path(output_path, 'filenames_and_positions.txt')
+    output_photo_path = join_path(output_path, 'output_photo_path')
 
     # --------------------------------------------------------------------------
     # se escoge el tamano apropiado para las imagenes pequenas
@@ -91,7 +93,10 @@ def main():
         pos_mat = loaded['b']
     # --------------------------------------------------------------------------
     # --------------------------------------------------------------------------
-    generate_mosaic_resize(shape_images, corr_mat, new_set_path, pos_mat, little_shape, output_path_mosaic, output_filenames_list_pos)
+    # generate_mosaic_resize(shape_images, corr_mat, new_set_path, pos_mat, little_shape, output_path_mosaic, output_filenames_list_pos)
+    # --------------------------------------------------------------------------
+    # --------------------------------------------------------------------------
+    create_photos(output_photo_path, output_filenames_list_pos)
     # --------------------------------------------------------------------------
     # --------------------------------------------------------------------------
     print('success!')
