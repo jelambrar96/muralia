@@ -93,7 +93,7 @@ def main():
         pos_mat = loaded['b']
     # --------------------------------------------------------------------------
     # --------------------------------------------------------------------------
-    # generate_mosaic_resize(shape_images, corr_mat, new_set_path, pos_mat, little_shape, output_path_mosaic, output_filenames_list_pos)
+    generate_mosaic_resize(shape_images, corr_mat, new_set_path, pos_mat, little_shape, output_path_mosaic, output_filenames_list_pos)
     # --------------------------------------------------------------------------
     # --------------------------------------------------------------------------
     create_photos(output_photo_path, output_filenames_list_pos)
