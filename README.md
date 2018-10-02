@@ -16,11 +16,11 @@ Imagen de salida ampliada:
 
 <img src="main_images/output_flowers.png" width=480>
 
-### RECOMENDACIONES:
+### Recomendaciones:
 
-Se pueden elegir si las imágenes serán rotadas e invertidas, modificando la lista listpost
+* Se pueden elegir si las imágenes serán rotadas e invertidas, modificando la lista listpost
 
-Es recomendable agregar más imágenes de las que estará compuesta el mosaico
+* Es recomendable agregar más imágenes de las que estará compuesta el mosaico
 
-Se puede elegir el luagar de la imagen donde ocurren la mayoría de las correlaciones.
+* Se puede elegir el lugar de la imagen donde ocurren la mayoría de las correlaciones.
 
